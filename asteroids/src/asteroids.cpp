@@ -23,48 +23,66 @@
 /* Game state */
 float elapsed_time; 
 int   score;
+int 	prevscore;
 int   lives;
+int 	tickCt;
 struct ship player;
 
 float Dt = 0.01f;
 
-Ticker model, view, controller;
+Ticker model, view, controller, timer;
 
 bool paused = true;
-/* The single user button needs to have the PullUp resistor enabled */
-DigitalIn userbutton(P2_10,PullUp);
-int main()
-{
 
+// increments tickCt every second and also it updates the score
+void timerHandler() {
+	if (!paused) {
+		tickCt++;
+		elapsed_time = tickCt;
+		score = tickCt;
+	}
+}
+
+void initialise_game() {
+		// initialisation
+	  minitialise();
+	  ainitialise();
     init_DBuffer();
     
-
+	  // tickers
     view.attach( draw, 0.025);
     model.attach( physics, Dt);
     controller.attach( controls, 0.1);
+	  timer.attach(&timerHandler, 1);
     
+	  // stats
     lives = 5;
+	  tickCt = 0;
+	  score = 0;
+	  elapsed_time = 0;
+	
+	  // player
+		player.p.x = 260; player.p.y = 160;
+		player.v.x = 0;	player.v.y = 0;
+		player.lostlife = 0;
     
-    /* Pause to start */
-    while( userbutton.read() ){ /* remember 1 is not pressed */
-        paused=true;
-        wait_ms(100);
-    }
-    paused = false;
+    paused = true;
+}
+
+int main()
+{
+		initialise_game();
     
     while(true) {
-        /* do one of */
-        /* Wait until all lives have been used
-        while(lives>0){
-            // possibly do something game related here
-            wait_ms(200);
+        while( !paused ){
+					while(lives == 0) {
+						// updates the previous score
+						prevscore = score;
+						// resets the whole game
+						reset();
+						initialise_game();
+					}
         }
-        */
-        /* Wait until each life is lost
-        while( inPlay ){
-            // possibly do something game related here
-            wait_ms(200);
-        }
-        */
+        
     }
 }
